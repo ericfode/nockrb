@@ -44,8 +44,7 @@ class Nocker
       case noun.type
       when :cell
         if noun.cell.length > 2
-          slice = Noun.new(noun.cell[0,noun.cell.length-2], Noun.new(noun.cell[-2..-1]))
-          puts slice.inspect
+          slice = Noun.new(noun.cell[0,noun.cell.length-2] << Noun.new(noun.cell[-2..-1]))
           return reduce(slice)
         end
         return noun
@@ -116,7 +115,6 @@ class Nocker
       end
     end
     puts "missed the boat"
-    raise "unknown type"
     puts noun.inspect
   end
 

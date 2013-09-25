@@ -42,7 +42,7 @@ include NockerHelpers
     end
     
     it "should returns a cellifyed version of a array of symblos" do
-      test = nounify([:a,[:a,:b]])
+      test = nounify([:a,[:b,:c]])
       @nocker.reduce(nounify([:a,:b,:c])).should same_as(test)
     end
   end
@@ -98,7 +98,7 @@ include NockerHelpers
      
     it 'should yeild the BFS indexed item' do
       @nocker.reduce(Noun.new(nounify([2,[[4,5],[6,14,15]]],:'/'))).should same_as(nounify([4,5]))
-      @nocker.reduce(Noun.new(nounify([3,[[4,5],[6,14,15]]],:'/'))).should same_as(nounify([6,14,15]))
+      @nocker.reduce(Noun.new(nounify([3,[[4,5],[6,14,15]]],:'/'))).should same_as(nounify([6,[14,15]]))
       @nocker.reduce(Noun.new(nounify([7,[[4,5],[6,14,15]]],:'/'))).should same_as(nounify([14,15]))
     end 
   end
