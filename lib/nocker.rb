@@ -22,22 +22,45 @@ class Noun
       end
     end
   end
+  def inspect()
+    case @type
+    when :cell
+      if @op != :nil_op
+        print "#{@op}" 
+      end
+      print '[' 
+      @cell.each do |item|
+        item.inspect
+        print ' '
+      end
+      print "]"
+    when :atom
+      print @atom
+    end
+  end
   def initialize(cell, op=:nil_op)
     @op =op 
+    if cell.kind_of?(Array) && cell.length == 1
+      cell = cell[0]
+    end
     if cell.kind_of?(Array)
       @cell = cell
       @type = :cell
+    elsif cell.kind_of?(Noun)
+      @atom = cell.atom
+      @cell = cell.cell
+      @type = cell.type
     else
       @atom = cell
       @type = :atom
     end
-    
   end
-
 end
 
 class Nocker
   def reduce(noun)
+    
+    puts "#{noun.inspect}"
     case noun.op
     # reduction 0
     when :nil_op
@@ -49,9 +72,6 @@ class Nocker
         end
         return noun
       when :atom
-        if noun.atom.kind_of? Noun
-          return reduce(noun.atom)
-        end
           return noun
       end
       # reuction 1
@@ -61,10 +81,55 @@ class Nocker
       when :atom
         return noun
       when :cell
-        puts noun.inspect
-        return Noun.new(noun)
+        case noun.cell[1].cell[0].type
+        when :cell
+          innerleft = reduce(noun.cell[1].cell[0])
+          innerright = reduce(noun.cell[1].cell[1])
+          return reduce(Noun.new([
+            reduce(Noun.new(
+              [noun.cell[0],innerleft],:'*')),
+            reduce(Noun.new(
+              [noun.cell[0],innerright],:'*'))]))
+               
+        
+        when :atom
+          case noun.cell[1].cell[0].atom
+          when 0
+            #reduction 18
+            return reduce(Noun.new([ noun.cell[1].cell[1],noun.cell[0]],:'/'))
+          when 1
+            #reduction 19
+            return reduce(noun.cell[1]).cell[1]
+
+          when 2
+            inner = reduce(noun.cell[1]) 
+            a = noun.cell[0]
+            b = inner.cell[1].cell[0]
+            c = inner.cell[1].cell[1]
+            return reduce(Noun.new([
+              reduce(Noun.new([a,b],:'*')),
+              reduce(Noun.new([a,c],:'*'),)],:'*'))
+          when 3
+            return reduce(Noun.new([
+                    reduce(Noun.new([
+                        noun.cell[0],
+                        reduce(noun.cell[1]).cell[1]],:'*'))],
+                        :'?'))
+          when 4
+            return reduce(Noun.new([
+                    reduce(Noun.new([
+                        noun.cell[0],
+                        reduce(noun.cell[1]).cell[1]],:'*'))],
+                        :'+'))
+          when 5
+            return reduce(Noun.new([
+                    reduce(Noun.new([
+                        noun.cell[0],
+                        reduce(noun.cell[1]).cell[1]],:'*'))],
+                        :'='))
+          end
+        end
       end
-    
     when :'?'
       case noun.type
       # reduction 4
@@ -79,28 +144,27 @@ class Nocker
       when :atom
         return Noun.new(noun.atom + 1)
       when :cell
-        raise "idiot you gave me a cell where i can only take a atom inc_op"
+        raise 'you gave me an atom for + op'
       end
     #reduction 7 and 8 
     when :'='
       case noun.type
       when :cell
-
         if noun.cell[0].atom == noun.cell[1].atom
           return Noun.new(0)
         else
           return Noun.new(1)
         end
+      when :atom
+          raise ' you gave me an atom for = op'
       end 
     when :'/'
       case noun.type
       when :cell
-        puts noun.inspect
         slot = noun.cell[0].atom
         if slot == 1
           return reduce(noun.cell[1])
         else
-          
           inner = reduce(noun.cell[1])
           head = inner.cell[0] 
           tail = inner.cell[1]
@@ -114,8 +178,9 @@ class Nocker
         end
       end
     end
-    puts "missed the boat"
+    
     puts noun.inspect
+    raise"missed the boat"
   end
 
 end
