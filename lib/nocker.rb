@@ -1,4 +1,4 @@
-
+require 'logger' 
 class Noun 
   attr_accessor :cell 
   attr_accessor :op
@@ -25,17 +25,16 @@ class Noun
   def inspect()
     case @type
     when :cell
+      op = ""
       if @op != :nil_op
-        print "#{@op}" 
+        op = "#{@op}" 
       end
-      print '[' 
-      @cell.each do |item|
+      items = @cell.map do |item|
         item.inspect
-        print ' '
       end
-      print "]"
-    when :atom
-      print @atom
+      return op + '[' + items.join(' ') + ']' 
+      when :atom
+        return @atom
     end
   end
   def initialize(cell, op=:nil_op)
@@ -58,9 +57,12 @@ class Noun
 end
 
 class Nocker
+  def initialize
+    @log = Logger.new(STDOUT)
+  end
+
   def reduce(noun)
-    
-    puts "#{noun.inspect}"
+    @log.info("#{noun.inspect}") 
     case noun.op
     # reduction 0
     when :nil_op
@@ -90,8 +92,6 @@ class Nocker
               [noun.cell[0],innerleft],:'*')),
             reduce(Noun.new(
               [noun.cell[0],innerright],:'*'))]))
-               
-        
         when :atom
           case noun.cell[1].cell[0].atom
           when 0
@@ -179,7 +179,6 @@ class Nocker
       end
     end
     
-    puts noun.inspect
     raise"missed the boat"
   end
 
